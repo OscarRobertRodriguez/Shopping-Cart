@@ -11,12 +11,24 @@ var cart = {
 };
 
 var utilities = {
-  find: function(list, id) {
-    return list.map(function(x) {
-        return x.id;
-      })
-      .indexOf(id);
-  },
+   find: function (list, id) {
+      var i = 0;
+      var found = false;
+
+      while (!found && i < list.length) {
+         if (list[i].id === id) {
+            found = true;
+         }
+         i++;
+      }
+
+      if (found) {
+         return i - 1;
+      } else {
+         return -1;
+      }
+
+   },
   findByProductName: function (list, name) {
       var i = 0;
       var found = false;
@@ -43,7 +55,7 @@ var utilities = {
       }
       return num;
    },
-}
+};
 //var itemsInShoppingCart = document.getElementById("shopping-items");
 var itemsInCart = document.getElementById("shopping-items");
 console.log("shopping-items " + itemsInCart);
@@ -68,29 +80,35 @@ function showHide (element) {
 var subTotal = document.getElementById("subtotal");
 var shoppingItems = document.getElementById("shopping-items");
 //var productQuantity = 0;
+
+
 function addItem(id) {
 
   //var shoppingItems = document.getElementById("shopping-items");
 
   // Look up product details
   var product = document.getElementById(id);
-  console.log("product " + product);
+   // added itemId
+  var itemId = product.getAttribute("id");
+   console.log(itemId);
   var productName = product.querySelector(".title").innerHTML;
-  console.log("productName " + productName);
   var productDescription = product.querySelector(".product-description").innerHTML;
   var shortProductDescription = productDescription.substr(0, productDescription.indexOf("."));
   var productPic = product.querySelector(".img").src;
-  //console.log("productPic " + productPic);
+  // indexInCartObject
+   var indexInCartObject = utilities.find(cart.items, itemId);
+
   var productPrice = parseFloat(product.querySelector(".st").innerHTML.replace(/[^\d|\.]/g, ""));
   console.log("productPrice = " + productPrice); 
  // var productQuantity = parseInt(product.querySelector(".product-quantity").value) || 1;
-  //console.log("productQuantity = " + productQuantity);
+
+console.log(indexInCartObject);
   // Check if items exists, if so increment count, else add to cart
   var inputFieldId = cart.items.length;
   console.log("cart.items.length = " + cart.items.length);
   if (cart.items.length === 0 || indexInCartObject === -1) {
     cart.items.push({
-      "id": id,
+      "id": itemId,
       "featuredImage": productPic,
       "name": productName,
       "price": productPrice,
@@ -101,21 +119,23 @@ function addItem(id) {
   
     } else {
       
-        cart.itemsCart[index].count += 1;
-        cart.itemsCart[index].totalPrice += productPrice;
+        cart.items[indexInCartObject].count += 1;
+        cart.items[indexInCartObject].totalPrice += productPrice;
     }
   
  console.log("before render cart on screen " + cart.items.length);
   // Rerender cart on screen
   //shoppingItems.innerHTML = JSON.stringify(cart, null, 2);
   
-  console.log("items = " + itemsInCart.length);
+  console.log(cart.items);
     // use a function from utilities object to update our cart number in fixed nav bar on each click
 
   displayInCart();
   calculateSubTotal();
   //updateTotalPrice();
 }
+
+
 function calculateSubTotal(){
   //Set cart-total back to 0 before calculating it
   cart["cart-total"] = 0;
@@ -131,6 +151,8 @@ function calculateSubTotal(){
   subTotal.value = "$" + cart["cart-total"];
   console.log("subtotal = " + cart["cart-total"]);
 }
+
+
 function updateSubTotal(productName){
   console.log("updateSubTotal " + productName + " " + cart.items.length);
   for (var i = 0; i < cart.items.length; i++){
@@ -152,7 +174,7 @@ function displayInCart() {
 
    for (var i = 0; i < cart.items.length; i++) {
       if (i >= 1) {
-        
+
          itemsInCart.innerHTML += "<hr id='line" + i + "'><br>"
       }
 
@@ -185,6 +207,7 @@ function displayInCart() {
           '<li>'
 
    }
+}  // where missing this bracket
 
 
 // Activate removeItem() function if user click Remove button
@@ -204,46 +227,37 @@ function displayInCart() {
 
   // remove object when the button "remove" is pressed for that item
 function remove(ele) {
-console.log("remove");
-  console.log(ele);
+
    var product = ele.parentNode.previousSibling.previousSibling.previousSibling;
-  console.log("parNode ="+ele.parentNode);
-  console.log("product = " + product);
+
    var productName = product.previousSibling.firstChild.innerHTML;
-  console.log("product Name " + productName);
+  console.log(productName);
   updateSubTotal(productName);
-  console.log("before findByProductName");
-  console.log("cart.items.length before findByName " + cart.items.length);
+
   var cartObject = utilities.findByProductName(cart.items, productName);
-  console.log("cartObject = " + cartObject); 
-  
-   console.log("cart.items.length  before splice" + cart.items.length);
+
+
   if (cartObject != null)
    cart.items.splice(cartObject, 1);
   
-  console.log("cart.items.length  after slice" + cart.items.length);
 
- //console.log("update " + utilities.cartTotalItems(cart.items));
-  console.log("before updateTotalPrice in remove"); 
-  //updateTotalPrice();
-  console.log("before displayInCart in remove"); 
    displayInCart();
 }
 
   // lowers the quantity of item by 1
 // will remove item from cart when trying to decrement past zero
-function decrementValue(ele) {
-  console.log("decrementValue");
+ function decrementValue(ele) {
+
    var product = ele.parentNode.previousSibling.previousSibling;
-   console.log("product decr " + product);
+
    var productName = product.firstChild.innerHTML;
-   console.log("productName decr " + productName);
+
    var inputTag = ele.nextSibling;
-  console.log("input Tag decr" + inputTag);
+
    var inputValue = Number(inputTag.value);
-  console.log("inputValue decr" +inputValue);
+
    var cartIndex = utilities.findByProductName(cart.items, productName);
-console.log("cartIndex decr " + cartIndex);
+
 
    if (cart.items[cartIndex].name === productName && inputValue > 1) {
       cart.items[cartIndex].count -= 1;
@@ -251,23 +265,24 @@ console.log("cartIndex decr " + cartIndex);
       inputValue = isNaN(inputValue) ? 0 : inputValue;
       inputValue -= 1;
       inputTag.setAttribute("value", inputValue);
-  
+
       //updateTotalPrice();
       displayInCart();
    }
    else {
-     console.log("else name==productName");
+
       cart.items.splice(cartIndex, 1);
 
      // updateTotalPrice();
-     console.log("Before displayInCart decr");
+
       displayInCart();
    }
 
 
 }
+   
   // increases the items in cart by one using the plus sign in shopping cart
-function incrementValue(ele) {
+ function incrementValue (ele) {
   console.log("Increment");
    var product = ele.parentNode.previousSibling.previousSibling;
    var productName = product.firstChild.innerHTML;
@@ -302,5 +317,5 @@ function updateTotalPrice() {
 }
 
 
-}
+
 
